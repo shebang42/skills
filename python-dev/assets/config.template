@@ -1,0 +1,20 @@
+# Python Development Skill - Gitea Configuration
+# Copy this file to: ~/.config/python-dev/config
+# Then edit with your actual credentials
+
+# Gitea server URL (no trailing slash)
+GITEA_URL=https://git.home:3443
+
+# Your Gitea username
+GITEA_USERNAME=your-username
+
+# Your Gitea access token
+# Generate at: Settings → Applications → Generate New Token
+# Required permissions: write:repository
+GITEA_TOKEN=your-access-token-here
+
+# Security notes:
+# 1. This file should have restrictive permissions: chmod 600 ~/.config/python-dev/config
+# 2. Never commit this file to version control
+# 3. Rotate tokens regularly
+# 4. Revoke unused tokens in Gitea settings
