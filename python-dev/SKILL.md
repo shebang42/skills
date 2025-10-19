@@ -1,295 +1,159 @@
 ---
 name: python-dev
-description: Python development with maintainable code practices. Use when creating or modifying Python projects, implementing features with TDD, or working with Python codebases. Enforces OOP, SOLID principles, type hints, pytest testing (80+ percent coverage), uv package management, ruff formatting, mypy type checking, gitflow workflow, Docker deployment, and Pydantic validation. Creates structured projects with proper documentation.
+description: Python development with TDD and maintainability focus. Use for Python projects requiring test-driven development, OOP, SOLID principles, type safety, and high code quality. Includes pytest testing (80+ percent coverage), mypy type checking, ruff formatting, uv package management, and Pydantic validation. Creates well-structured Python projects with comprehensive testing.
 ---
 
 # Python Development
 
-Comprehensive Python development skill for creating maintainable, well-tested Python applications following best practices and SOLID principles.
+Focused skill for Python development with test-driven development, type safety, and code quality.
 
 ## Core Principles
 
-Follow these principles for all Python development:
-
-1. **Test-Driven Development (TDD)** - Write tests first, then implementation
+1. **Test-Driven Development** - Write tests first, then implementation
 2. **Object-Oriented Programming** - Use OOP over procedural unless specified
-3. **SOLID Principles** - Design for maintainability and extensibility
-4. **Type Safety** - Use type hints throughout codebase
+3. **SOLID Principles** - Single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion
+4. **Type Safety** - Complete type hints with mypy validation
 5. **Immutability** - Prefer immutable data structures
-6. **High Test Coverage** - Maintain >80% code coverage
-7. **Code Quality** - Use ruff for linting/formatting, mypy for type checking
+6. **80+ percent Test Coverage** - Maintain high coverage with pytest and coverage.py
+7. **Code Quality** - Enforce with ruff linting and formatting
 
-## Project Setup
+## Quick Start
 
-### Configure Gitea Credentials (First Time Only)
-
-Before using automatic repository creation, set up your Gitea credentials:
-
-```bash
-# Copy template to config directory
-mkdir -p ~/.config/python-dev
-cp assets/config.template ~/.config/python-dev/config
-
-# Edit with your credentials
-nano ~/.config/python-dev/config
-
-# Secure the file
-chmod 600 ~/.config/python-dev/config
-```
-
-See [references/configuration.md](references/configuration.md) for detailed setup instructions.
-
-### Initialize New Project
-
-Use the bundled initialization script for new projects:
-
-```bash
-python scripts/init_project.py project-name --path /path/to/parent
-```
-
-This creates a complete project structure with:
-- Standard directory layout (src/, tests/, docs/)
-- Configured pyproject.toml with all tools
-- Git repository with gitflow branches
-- Gitea remote repository setup
-- Initial commit on develop branch
-- Example test file and main entry point
-
-### Manual Project Structure
-
-If not using the init script, create this structure:
+### New Project Structure
 
 ```
 project-name/
-├── src/package_name/           # Source code
-│   ├── models/                 # Domain models (Pydantic)
-│   ├── services/               # Business logic
-│   ├── repositories/           # Data access
-│   ├── api/                    # API routes
-│   └── utils/                  # Utilities
-├── tests/                      # Test files
+├── src/package_name/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── models/         # Pydantic models
+│   ├── services/       # Business logic
+│   ├── repositories/   # Data access
+│   └── utils/          # Utilities
+├── tests/
+│   ├── __init__.py
 │   ├── test_models/
 │   ├── test_services/
 │   └── integration/
-├── pyproject.toml              # Project config
+├── pyproject.toml
 ├── README.md
 ├── ARCHITECTURE.md
-├── API.md                      # For APIs/web services
-├── PLANNING.md                 # Task breakdown
-├── Dockerfile
-└── docker-compose.yml
+└── PLANNING.md
 ```
 
-See [references/project-structure.md](references/project-structure.md) for detailed structure guidance and templates.
+### Initialize Project
 
-## Development Workflow
+```bash
+# Use bundled init script
+python scripts/init_project.py my-project
 
-### 1. Planning and Task Breakdown
-
-Before coding, create or update `PLANNING.md` with task breakdown:
-
-```markdown
-## Task Breakdown
-
-### Feature: User Authentication
-- [ ] Create User model with validation
-- [ ] Implement UserRepository for data access
-- [ ] Create UserService with business logic
-- [ ] Add authentication API endpoints
-- [ ] Write unit tests for all components
-- [ ] Write integration tests for API
-- [ ] Update documentation
+# Or manually
+mkdir -p my-project/src/my_package my-project/tests
+cd my-project
+uv init
+uv sync --dev
 ```
 
-### 2. Test-Driven Development
+## Test-Driven Development Workflow
 
 **Strict TDD cycle for every feature:**
 
-1. **Write failing test** - Define expected behavior
-2. **Run test** - Verify it fails (red phase)
-3. **Write minimal code** - Make test pass
-4. **Run test** - Verify it passes (green phase)
+1. **Write test** - Define expected behavior in test
+2. **Run test** - Verify it fails (red)
+3. **Write code** - Minimal implementation
+4. **Run test** - Verify it passes (green)
 5. **Refactor** - Improve code quality
-6. **Mark task complete** - Update PLANNING.md
+6. **Next task** - Only proceed after tests pass
 
-**Only move to next task after all tests pass.**
+### Example TDD Cycle
 
-See [references/testing.md](references/testing.md) for comprehensive testing patterns.
+```python
+# Step 1: Write failing test
+def test_calculate_total_empty_cart_returns_zero() -> None:
+    """Test that empty cart returns zero total."""
+    cart = ShoppingCart()
+    assert cart.calculate_total() == 0
 
-### 3. Code Implementation
+# Step 2: Run test (fails - ShoppingCart doesn't exist)
+# Step 3: Write minimal code
+class ShoppingCart:
+    def calculate_total(self) -> int:
+        return 0
 
-Follow these patterns:
+# Step 4: Run test (passes)
+# Step 5: Refactor if needed
+```
 
-#### Models Layer (Pydantic)
+See [references/tdd-workflow.md](references/tdd-workflow.md) for detailed patterns.
+
+## Code Implementation Patterns
+
+### Models Layer (Pydantic)
 
 ```python
 from pydantic import BaseModel, EmailStr, Field
 
 
 class User(BaseModel):
-    """User domain model."""
+    """User domain model with validation."""
     
-    id: int = Field(..., gt=0)
+    id: int = Field(..., gt=0, description="User ID")
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr
+    is_active: bool = Field(default=True)
     
     class Config:
         """Pydantic configuration."""
         frozen = True  # Immutability
 ```
 
-#### Services Layer (Business Logic)
+### Services Layer (Business Logic)
 
 ```python
 from typing import Protocol
 
+
 class UserRepository(Protocol):
     """Repository interface for dependency injection."""
+    
     def create(self, user: User) -> User: ...
+    def find_by_email(self, email: str) -> User | None: ...
+
 
 class UserService:
     """User business logic following SOLID principles."""
     
     def __init__(self, repository: UserRepository) -> None:
-        """Inject repository dependency."""
+        """Initialize with injected repository dependency."""
         self._repository = repository
     
     def register_user(self, name: str, email: str) -> User:
         """Register new user with validation."""
+        existing = self._repository.find_by_email(email)
+        if existing:
+            raise ValueError(f"User with email {email} already exists")
+        
         user = User(id=0, name=name, email=email)
         return self._repository.create(user)
 ```
 
-#### Repositories Layer (Data Access)
-
-```python
-class UserRepository:
-    """User data access implementation."""
-    
-    def create(self, user: User) -> User:
-        """Persist user to database."""
-        # Implementation
-        pass
-```
-
-### 4. Code Quality Checks
-
-Run after each implementation:
-
-```bash
-# Format code
-uv run ruff format .
-
-# Lint code
-uv run ruff check .
-
-# Type check
-uv run mypy src/
-
-# Run tests with coverage
-uv run pytest
-
-# Run all checks
-uv run ruff format . && uv run ruff check . && uv run mypy src/ && uv run pytest
-```
-
-### 5. Git Workflow
-
-Follow gitflow workflow with Gitea:
-
-```bash
-# Start feature from develop
-git checkout develop
-git pull origin develop
-git checkout -b feature/feature-name
-
-# Commit with conventional format
-git commit -m "feat(module): add feature description"
-
-# Push and create PR
-git push -u origin feature/feature-name
-```
-
-See [references/git-workflow.md](references/git-workflow.md) for complete gitflow process.
-
-## Tool Configuration
-
-### Python Version
-
-Use Python 3.13 for all projects.
-
-### Package Management (uv)
-
-```bash
-# Install dependencies
-uv sync
-
-# Install with dev dependencies
-uv sync --dev
-
-# Add new dependency
-uv add package-name
-
-# Add dev dependency
-uv add --dev package-name
-
-# Update dependencies
-uv sync --upgrade
-```
-
-### Testing (pytest + coverage.py)
-
-```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage report
-uv run pytest --cov=src --cov-report=html --cov-report=term
-
-# Run specific test file
-uv run pytest tests/test_module.py
-
-# Run with verbose output
-uv run pytest -v
-```
-
-**Coverage requirement: >80%**
-
-### Linting and Formatting (ruff)
-
-```bash
-# Format code (auto-fix)
-uv run ruff format .
-
-# Check linting issues
-uv run ruff check .
-
-# Fix linting issues automatically
-uv run ruff check --fix .
-```
-
-### Type Checking (mypy)
-
-```bash
-# Type check source code
-uv run mypy src/
-
-# Type check with verbose output
-uv run mypy src/ --show-error-codes
-```
-
 ## Testing Patterns
 
-### Unit Test Structure
+### Unit Tests
 
 ```python
+import pytest
+from unittest.mock import Mock
+
+
 class TestUserService:
     """Test suite for UserService."""
     
     def test_register_user_valid_data_returns_user(self) -> None:
-        """Test user registration with valid data."""
+        """Test successful user registration."""
         # Arrange
         mock_repo = Mock(spec=UserRepository)
+        mock_repo.find_by_email.return_value = None
         service = UserService(mock_repo)
         
         # Act
@@ -303,126 +167,89 @@ class TestUserService:
 ### Parametrized Tests
 
 ```python
-@pytest.mark.parametrize("email,expected", [
+@pytest.mark.parametrize("email,is_valid", [
     ("valid@example.com", True),
     ("invalid", False),
-    ("", False),
 ])
-def test_email_validation(email: str, expected: bool) -> None:
-    """Test email validation with multiple inputs."""
-    result = is_valid_email(email)
-    assert result == expected
+def test_email_validation(email: str, is_valid: bool) -> None:
+    """Test email validation."""
+    if is_valid:
+        user = User(id=1, name="Test", email=email)
+        assert user.email == email
+    else:
+        with pytest.raises(ValueError):
+            User(id=1, name="Test", email=email)
 ```
 
-For more patterns, see [references/testing.md](references/testing.md).
+See [references/testing-patterns.md](references/testing-patterns.md) for more examples.
 
-## Deployment
+## Tool Usage
 
-### Docker Setup
-
-Use provided templates in `assets/` directory:
+### Package Management (uv)
 
 ```bash
-# Copy templates
-cp assets/Dockerfile.template Dockerfile
-cp assets/docker-compose.yml.template docker-compose.yml
-cp assets/env.example.template .env.example
-
-# Customize for your project
-# Edit package_name and project-specific settings
+uv sync              # Install dependencies
+uv sync --dev        # Include dev dependencies
+uv add pydantic      # Add dependency
+uv run pytest        # Run in environment
 ```
 
-### Docker Commands
+### Testing (pytest)
 
 ```bash
-# Build and start services
-docker compose up -d
-
-# View logs
-docker compose logs -f app
-
-# Run tests in container
-docker compose exec app uv run pytest
-
-# Stop services
-docker compose down
+uv run pytest                          # Run all tests
+uv run pytest --cov=src                # With coverage
+uv run pytest tests/test_module.py     # Specific file
 ```
-
-See [references/deployment.md](references/deployment.md) for complete deployment guide.
-
-## Documentation Requirements
-
-Every project must include:
-
-1. **README.md** - Project overview, installation, usage
-2. **ARCHITECTURE.md** - System design, patterns, data flow
-3. **API.md** - API endpoints (for web services)
-4. **PLANNING.md** - Task breakdown with checkboxes
-
-Templates available in [references/project-structure.md](references/project-structure.md).
-
-## Security Best Practices
-
-1. **Never commit secrets** - Use .env files, add to .gitignore
-2. **Validate all inputs** - Use Pydantic models
-3. **Use type hints** - Catch errors early with mypy
-4. **Principle of least privilege** - Run containers as non-root
-5. **Keep dependencies updated** - Regular security updates
-
-## Bundled Resources
-
-### Scripts
-
-- **init_project.py** - Initialize new Python project with complete structure and configuration. Reads Gitea credentials from config file or environment variables (never hardcoded).
-
-### References
-
-- **testing.md** - Comprehensive testing guide with pytest, coverage, TDD workflow
-- **git-workflow.md** - Gitflow workflow, Gitea setup, commit conventions
-- **project-structure.md** - Standard project layout, templates for README/ARCHITECTURE/API docs
-- **deployment.md** - Docker containerization, docker compose, environment configuration
-- **configuration.md** - Security-focused guide for setting up Gitea credentials
-
-### Assets
-
-- **Dockerfile.template** - Multi-stage Docker build template
-- **docker-compose.yml.template** - Complete docker compose configuration with PostgreSQL
-- **env.example.template** - Environment variables template
-- **config.template** - Gitea credentials template (never includes actual secrets)
-
-## Quick Reference
-
-### Start New Project
-
-```bash
-# Initialize project (recommended)
-python scripts/init_project.py my-project
-
-# Or manually create structure
-mkdir -p my-project/src/my_package my-project/tests
-cd my-project
-uv init
-uv sync --dev
-```
-
-### TDD Cycle
-
-1. Write test → 2. Run (fail) → 3. Write code → 4. Run (pass) → 5. Refactor
 
 ### Code Quality
+
+```bash
+uv run ruff format .     # Format code
+uv run ruff check .      # Lint code
+uv run mypy src/         # Type check
+```
+
+### Complete Check
 
 ```bash
 uv run ruff format . && uv run ruff check . && uv run mypy src/ && uv run pytest
 ```
 
-### Git Flow
+## Configuration
 
-```bash
-feature/name → develop → release/v1.0.0 → main (tagged)
-```
+See [references/pyproject-config.md](references/pyproject-config.md) for complete pyproject.toml template with:
+- pytest configuration
+- coverage.py settings (80 percent threshold)
+- mypy strict checking
+- ruff linting rules
 
-### Deploy
+## Documentation
 
-```bash
-docker compose up -d
-```
+Required files:
+1. **README.md** - Project overview
+2. **ARCHITECTURE.md** - Design decisions
+3. **PLANNING.md** - Task breakdown
+
+Templates in [references/documentation-templates.md](references/documentation-templates.md).
+
+## Bundled Resources
+
+### Scripts
+- **init_project.py** - Initialize Python project structure
+
+### References
+- **tdd-workflow.md** - TDD patterns and workflow
+- **testing-patterns.md** - pytest patterns, fixtures, mocking
+- **pyproject-config.md** - Complete configuration
+- **documentation-templates.md** - Doc templates
+
+## Quick Reference
+
+**TDD**: Test → Fail → Code → Pass → Refactor
+
+**Quality**: `uv run ruff format . && uv run ruff check . && uv run mypy src/ && uv run pytest`
+
+**Coverage**: 80+ percent target
+
+**Python**: 3.13 required
